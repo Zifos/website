@@ -264,8 +264,9 @@ export const footer = style({
   paddingInline: vars.space.md,
   // A clear pause after the legend's last line, so the link reads as leaving the story.
   paddingBlockStart: "clamp(4rem, 12vh, 7rem)",
-  // Room to scroll the link up out of the focus gradient (bottom 40svh of the screen).
-  paddingBlockEnd: "46svh",
+  // Just breathing room: the focus gradient clears once the page end is in view (see Home.astro),
+  // so nothing needs to scroll up out of it.
+  paddingBlockEnd: "clamp(3rem, 10svh, 6rem)",
 });
 
 export const backToTop = style({
@@ -311,8 +312,11 @@ export const focusGradient = style({
   height: "40svh",
   zIndex: 1,
   pointerEvents: "none",
+  transition: "opacity 0.8s ease",
   // Dim toward the edge: the darkening paints over the blurred text.
   selectors: {
+    // The page end is in view: the band fades out so the last lines read sharp.
+    "&[data-cleared]": { opacity: 0 },
     "&::after": {
       content: "",
       position: "absolute",

@@ -37,7 +37,7 @@ const { title, areas, meta, legend } = copy[locale];
 <BaseLayout title={meta.title} description={meta.description} scheme="dark">
   <main class={styles.page}>
     <div class={styles.curtain} aria-hidden="true"></div>
-    <div class={styles.focusGradient} aria-hidden="true">
+    <div class={styles.focusGradient} aria-hidden="true" data-focus-gradient>
       {styles.FOCUS_LAYERS.map(() => <div class={styles.focusLayer}></div>)}
     </div>
     <section class={styles.hero}>
@@ -63,7 +63,7 @@ const { title, areas, meta, legend } = copy[locale];
       <h2 id="legend" class={styles.storyTitle}>{legend.frontmatter.title}</h2>
       <legend.Content />
     </article>
-    <footer class={styles.footer}>
+    <footer class={styles.footer} data-page-end>
       <!-- "#top" scrolls to the top of the document without needing an element with that id. -->
       <a class={styles.backToTop} href="#top">
         {ui[locale].backToTop}
@@ -75,3 +75,15 @@ const { title, areas, meta, legend } = copy[locale];
     </footer>
   </main>
 </BaseLayout>
+
+<script>
+  // Clear the focus gradient while the page end is on screen, so the legend's last lines and the
+  // back-to-top link aren't blurred (and the page needs no extra scroll room to escape the band).
+  const gradient = document.querySelector("[data-focus-gradient]");
+  const end = document.querySelector("[data-page-end]");
+  if (gradient && end) {
+    new IntersectionObserver(([entry]) => {
+      gradient.toggleAttribute("data-cleared", entry?.isIntersecting ?? false);
+    }).observe(end);
+  }
+</script>
