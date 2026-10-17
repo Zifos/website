@@ -249,6 +249,16 @@ export const storyTitle = style({
   textAlign: "center",
 });
 
+// Closes the hero, a step further from the areas than the hero's own gap; arrives with the
+// story. Inside the hero, so it shares its layer above the focus gradient (never blurred).
+export const contact = style({
+  display: "flex",
+  justifyContent: "center",
+  maxWidth: "100%",
+  marginBlockStart: vars.space.md,
+  animation: `${fadeIn} 1.2s ease-out 5s both`,
+});
+
 globalStyle(`${story} p`, {
   marginBlockEnd: "1.1em",
   textWrap: "pretty",
@@ -298,7 +308,7 @@ FOCUS_LAYERS.forEach((blur, i) => {
 
 // Respect reduced motion: show the final frame.
 globalStyle(
-  `${curtain}::before, ${curtain}::after, ${logo}, ${letter}, ${areas}, ${story}, ${languageSwitch}`,
+  `${curtain}::before, ${curtain}::after, ${logo}, ${letter}, ${areas}, ${story}, ${languageSwitch}, ${contact}`,
   {
     "@media": {
       "(prefers-reduced-motion: reduce)": { animation: "none" },

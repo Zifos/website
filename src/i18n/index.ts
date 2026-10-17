@@ -11,8 +11,20 @@ export const localeInfo: Record<Locale, { name: string; short: string; og: strin
 export const LOCALE_STORAGE_KEY = "zifos:locale";
 
 export const ui = {
-  en: { language: "Language" },
-  es: { language: "Idioma" },
+  en: {
+    language: "Language",
+    email: "hi@zifos.dev",
+    copyEmail: "Copy email",
+    copied: "Copied",
+    sendEmail: "Send email",
+  },
+  es: {
+    language: "Idioma",
+    email: "hola@zifos.dev",
+    copyEmail: "Copiar email",
+    copied: "Copiado",
+    sendEmail: "Enviar email",
+  },
 } satisfies Record<Locale, Record<string, string>>;
 
 export function toLocale(value: string | undefined): Locale {

@@ -1,0 +1,58 @@
+---
+import { toLocale, ui } from "@/i18n";
+import * as styles from "./EmailField.css";
+
+const t = ui[toLocale(Astro.currentLocale)];
+---
+
+<div class={styles.field} data-email-field>
+  <span class={styles.address}>{t.email}</span>
+  <button
+    class={styles.action}
+    type="button"
+    aria-label={t.copyEmail}
+    title={t.copyEmail}
+    data-copy={t.email}
+  >
+    <svg class={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="12" height="12" rx="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+    <svg class={styles.iconCopied} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20 6 9 17l-5-5"></path>
+    </svg>
+  </button>
+  <a class={styles.action} href={`mailto:${t.email}`} aria-label={t.sendEmail} title={t.sendEmail}>
+    <svg class={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M22 2 11 13"></path>
+      <path d="M22 2 15 22l-4-9-9-4 20-7z"></path>
+    </svg>
+  </a>
+  <span class={styles.visuallyHidden} role="status" data-copied-label={t.copied}></span>
+</div>
+
+<script>
+  for (const field of document.querySelectorAll<HTMLElement>("[data-email-field]")) {
+    const button = field.querySelector<HTMLButtonElement>("[data-copy]");
+    const status = field.querySelector<HTMLElement>("[data-copied-label]");
+    let reset: ReturnType<typeof setTimeout> | undefined;
+
+    button?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy ?? "");
+      } catch {
+        // No clipboard access (insecure context, denied): select the address to copy by hand.
+        const address = field.firstElementChild;
+        if (address) getSelection()?.selectAllChildren(address);
+        return;
+      }
+      button.dataset.copied = "";
+      if (status) status.textContent = status.dataset.copiedLabel ?? "";
+      clearTimeout(reset);
+      reset = setTimeout(() => {
+        delete button.dataset.copied;
+        if (status) status.textContent = "";
+      }, 2000);
+    });
+  }
+</script>

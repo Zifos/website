@@ -1,5 +1,6 @@
 ---
 import Logo from "@brand/assets/logo/zifos-logo-small.svg";
+import EmailField from "@/components/EmailField.astro";
 import LanguageSwitch from "@/components/LanguageSwitch.astro";
 import * as legendEn from "@/data/fire-legend/en.md";
 import * as legendEs from "@/data/fire-legend/es.md";
@@ -53,6 +54,9 @@ const { title, areas, meta, legend } = copy[toLocale(Astro.currentLocale)];
       <ul class={styles.areas}>
         {areas.map((area) => <li class={styles.area}>{area}</li>)}
       </ul>
+      <div class={styles.contact}>
+        <EmailField />
+      </div>
     </section>
     <LanguageSwitch class={styles.languageSwitch} />
     <article class={styles.story} aria-labelledby="legend">

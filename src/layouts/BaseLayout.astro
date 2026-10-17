@@ -9,6 +9,7 @@ import {
   locales,
   routePath,
   toLocale,
+  ui,
 } from "@/i18n";
 import "@/styles/global.css";
 
@@ -35,11 +36,35 @@ const siteName = "Zifos";
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = image ? new URL(image, Astro.site).href : undefined;
 
+// The site and the studio behind it, with one contact point per language, so search engines can
+// pick up the contact email as the organization's (not just as text on the page).
+const home = getAbsoluteLocaleUrl(defaultLocale, "");
+const organization = `${home}#organization`;
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: siteName,
-  url: Astro.site?.href,
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${home}#website`,
+      name: siteName,
+      url: home,
+      inLanguage: [...locales],
+      publisher: { "@id": organization },
+    },
+    {
+      "@type": "Organization",
+      "@id": organization,
+      name: siteName,
+      url: home,
+      email: ui[defaultLocale].email,
+      contactPoint: locales.map((l) => ({
+        "@type": "ContactPoint",
+        contactType: "customer service",
+        email: ui[l].email,
+        availableLanguage: l,
+      })),
+    },
+  ],
 };
 ---
 
