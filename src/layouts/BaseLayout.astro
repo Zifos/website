@@ -1,5 +1,6 @@
 ---
 import { Font } from "astro:assets";
+import { PREVIEW } from "astro:env/server";
 import "@/styles/global.css";
 
 interface Props {
@@ -11,7 +12,10 @@ interface Props {
   scheme?: "dark" | "light";
 }
 
-const { title, description, image, noindex = false, scheme } = Astro.props;
+const { title, description, image, noindex: noindexProp = false, scheme } = Astro.props;
+const noindex = noindexProp || PREVIEW;
+// Site-root-relative asset URLs must include the base path (e.g. /website/ on GitHub Pages).
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 
 const siteName = "Zifos";
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -40,8 +44,8 @@ const jsonLd = {
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+    <link rel="sitemap" href={`${base}sitemap-index.xml`} />
     {
       scheme ? (
         <meta name="theme-color" content={scheme === "dark" ? "#0F0F10" : "#F5F1EA"} />

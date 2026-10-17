@@ -25,6 +25,10 @@ The guidelines are written in Spanish; keep them in Spanish when editing. When a
 
 Every page uses `src/layouts/BaseLayout.astro` with a unique `title` and `description`. Canonical, Open Graph, sitemap and robots.txt derive from `site` in `astro.config.ts`. URLs use trailing slashes.
 
+## Preview deploy
+
+Every push to `main` deploys a preview to GitHub Pages (https://zifos.github.io/website/) via `.github/workflows/deploy-preview.yml`. It builds with `SITE_URL`, `BASE_PATH=/website` and `PREVIEW=true` (noindex + robots `Disallow`), so it never competes with zifos.com in search. Because of the base path, never hardcode root-relative URLs (`/foo`): use `import.meta.env.BASE_URL`. Workflow actions are pinned to commit SHAs.
+
 ## Commands
 
 - `pnpm dev` — dev server (Astro 7 runs it as a daemon: `pnpm astro dev stop` / `status` / `logs`).
