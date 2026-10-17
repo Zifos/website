@@ -16,3 +16,6 @@ node_modules/
 # OS / editor
 .DS_Store
 .idea/
+
+# wrangler local state
+.wrangler/

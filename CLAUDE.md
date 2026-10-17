@@ -29,6 +29,10 @@ Every page uses `src/layouts/BaseLayout.astro` with a unique `title` and `descri
 
 Every push to `main` deploys a preview to GitHub Pages (https://zifos.github.io/website/) via `.github/workflows/deploy-preview.yml`. It builds with `SITE_URL`, `BASE_PATH=/website` and `PREVIEW=true` (noindex + robots `Disallow`), so it never competes with zifos.dev in search. Because of the base path, never hardcode root-relative URLs (`/foo`): use `import.meta.env.BASE_URL`. Workflow actions are pinned to commit SHAs.
 
+## Production deploy
+
+Every push to `main` also deploys to Cloudflare Workers (static assets) at https://zifos.dev via `.github/workflows/deploy-production.yml` (config in `wrangler.jsonc`, locked wrangler from devDependencies). Needs repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+
 ## Commands
 
 - `pnpm dev` — dev server (Astro 7 runs it as a daemon: `pnpm astro dev stop` / `status` / `logs`).

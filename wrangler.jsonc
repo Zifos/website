@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Production: static site on Cloudflare Workers (static assets), served at zifos.dev.
+  // Deployed by .github/workflows/deploy-production.yml on every push to main.
+  "name": "zifos-website",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // Astro builds /page/index.html with trailing-slash URLs (trailingSlash: "always").
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  },
+  "routes": [{ "pattern": "zifos.dev", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false
+}
