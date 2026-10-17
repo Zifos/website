@@ -15,6 +15,10 @@ const BOUNDS = {
   wordmark: [1061, 84, 2133, 586],
 };
 const PAD = 4;
+// Small-size variant: extra tracking for the wordmark, which feels tight when the logo is reduced.
+// Letters are identified by where their path starts (x, source px): z | i (dot + stem) | f | o | s.
+const LETTER_BREAKS = [1300, 1550, 1700, 1950];
+const SMALL_TRACKING = 30; // source px added between letters (~6% of the x-height)
 const GROUP = 'transform="translate(0 627) scale(.1 -.1)"';
 
 const svg = readFileSync(SRC, "utf8");
@@ -25,15 +29,26 @@ const startX = (d) => Number(d.match(/^M(-?\d+)/)[1]) / 10;
 const symbol = paths.filter((d) => startX(d) < GAP_X);
 const wordmark = paths.filter((d) => startX(d) >= GAP_X);
 
-const g = (ds) => `<g ${GROUP}>${ds.map((d) => `<path d="${d}"/>`).join("")}</g>`;
-const variant = (ds, [x0, y0, x1, y1]) => {
-  const vb = [x0 - PAD, y0 - PAD, x1 - x0 + 2 * PAD, y1 - y0 + 2 * PAD].join(" ");
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img" aria-label="Zifos" fill="currentColor">${g(ds)}</svg>\n`;
+const letterIndex = (d) => LETTER_BREAKS.filter((b) => startX(d) >= b).length;
+
+// `tracking` shifts each wordmark letter right by its index; path units are 10× source px.
+const g = (ds, tracking = 0) =>
+  `<g ${GROUP}>${ds
+    .map((d) => {
+      const dx = startX(d) >= GAP_X ? letterIndex(d) * tracking * 10 : 0;
+      return dx ? `<path transform="translate(${dx} 0)" d="${d}"/>` : `<path d="${d}"/>`;
+    })
+    .join("")}</g>`;
+const variant = (ds, [x0, y0, x1, y1], tracking = 0) => {
+  const extra = tracking * LETTER_BREAKS.length;
+  const vb = [x0 - PAD, y0 - PAD, x1 - x0 + extra + 2 * PAD, y1 - y0 + 2 * PAD].join(" ");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img" aria-label="Zifos" fill="currentColor">${g(ds, tracking)}</svg>\n`;
 };
 
 writeFileSync(`${OUT}/zifos-logo.svg`, variant(paths, BOUNDS.logo));
 writeFileSync(`${OUT}/zifos-isotipo.svg`, variant(symbol, BOUNDS.symbol));
 writeFileSync(`${OUT}/zifos-wordmark.svg`, variant(wordmark, BOUNDS.wordmark));
+writeFileSync(`${OUT}/zifos-logo-small.svg`, variant(paths, BOUNDS.logo, SMALL_TRACKING));
 
 // Favicon: square symbol; colors from brand/06-color.md (text, light/dark).
 const [x0, y0, x1, y1] = BOUNDS.symbol;

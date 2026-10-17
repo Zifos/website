@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.1 — 2026-10-16
+
+- Logo: variante `zifos-logo-small.svg` con más espaciado entre letras del wordmark, para tamaños reducidos. El master no cambia.
+
 ## v0.2 — 2026-10-16
 
 - Tipografía: Instrument Serif (títulos), DM Sans (texto) e IBM Plex Mono (código). Manuscrita pendiente.

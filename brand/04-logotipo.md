@@ -35,6 +35,7 @@ En [`assets/logo/`](./assets/logo/). Todos usan `fill="currentColor"`: toman el 
 | Archivo | Contenido | Uso |
 |---|---|---|
 | `zifos-logo.svg` | Imagotipo completo: `{ llama · · · }` + «zifos» | Uso principal |
+| `zifos-logo-small.svg` | Imagotipo con el wordmark un poco más espaciado | Tamaños reducidos (menos de ~200px de ancho): a escala chica el espaciado original se siente apretado |
 | `zifos-isotipo.svg` | Solo el símbolo | Espacios reducidos, avatares, favicon |
 | `zifos-wordmark.svg` | Solo «zifos» | Cuando el símbolo ya está presente |
 | `source/zifos-logo-original.svg` | SVG fuente (lienzo completo 2508×627) | Origen de los tres SVG de arriba |

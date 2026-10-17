@@ -1,6 +1,6 @@
 # ZIFOS — Brand Guidelines
 
-**Versión actual: v0.2 (borrador)** · Identidad, lenguaje y dirección artística.
+**Versión actual: v0.2.1 (borrador)** · Identidad, lenguaje y dirección artística.
 
 > *Escribimos poemas que compilan.*
 
