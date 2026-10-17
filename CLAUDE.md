@@ -25,6 +25,10 @@ The guidelines are written in Spanish; keep them in Spanish when editing. When a
 
 Every page uses `src/layouts/BaseLayout.astro` with a unique `title` and `description`. Canonical, Open Graph, sitemap and robots.txt derive from `site` in `astro.config.ts`. URLs use trailing slashes.
 
+## i18n
+
+English (default, at `/`) and Spanish (`/es/`), via Astro i18n; locales live in `src/i18n/config.ts`. Every page exists in both languages: put the page in `src/components/` and add a thin route under `src/pages/` and `src/pages/es/`. Long-form copy goes in `src/data/<name>/{en,es}.md`. Build links with `getRelativeLocaleUrl` from `astro:i18n`. Unprefixed pages redirect client-side to the visitor's language (explicit pick from `LanguageSwitch`, else browser languages); prefixed URLs never redirect.
+
 ## Preview deploy
 
 Every push to `main` deploys a preview to GitHub Pages (https://zifos.github.io/website/) via `.github/workflows/deploy-preview.yml`. It builds with `SITE_URL`, `BASE_PATH=/website` and `PREVIEW=true` (noindex + robots `Disallow`), so it never competes with zifos.dev in search. Because of the base path, never hardcode root-relative URLs (`/foo`): use `import.meta.env.BASE_URL`. Workflow actions are pinned to commit SHAs.

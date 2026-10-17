@@ -1,6 +1,15 @@
 ---
 import { Font } from "astro:assets";
 import { PREVIEW } from "astro:env/server";
+import { getAbsoluteLocaleUrl, getRelativeLocaleUrl } from "astro:i18n";
+import {
+  defaultLocale,
+  LOCALE_STORAGE_KEY,
+  localeInfo,
+  locales,
+  routePath,
+  toLocale,
+} from "@/i18n";
 import "@/styles/global.css";
 
 interface Props {
@@ -17,6 +26,11 @@ const noindex = noindexProp || PREVIEW;
 // Site-root-relative asset URLs must include the base path (e.g. /website/ on GitHub Pages).
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 
+const locale = toLocale(Astro.currentLocale);
+const path = routePath(Astro.url.pathname);
+// Where the root-language redirect may send a visitor (see the inline script below).
+const localeUrls = Object.fromEntries(locales.map((l) => [l, getRelativeLocaleUrl(l, path)]));
+
 const siteName = "Zifos";
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = image ? new URL(image, Astro.site).href : undefined;
@@ -30,10 +44,36 @@ const jsonLd = {
 ---
 
 <!doctype html>
-<html lang="en" data-scheme={scheme}>
+<html lang={locale} data-scheme={scheme}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {
+      /*
+        Default-locale (unprefixed) URLs follow the visitor's language: an explicit pick from the
+        language switch wins, else the first of the browser's languages we serve. Runs before first
+        paint so there's no flash. Prefixed URLs (/es/) are explicit and never redirect.
+      */
+      locale === defaultLocale && (
+        <script
+          is:inline
+          define:vars={{ urls: localeUrls, current: locale, key: LOCALE_STORAGE_KEY }}
+        >
+          let target;
+          try {
+            target = localStorage.getItem(key);
+          } catch {}
+          if (!Object.hasOwn(urls, target)) {
+            target = (navigator.languages ?? [navigator.language])
+              .map((tag) => tag.split("-")[0].toLowerCase())
+              .find((lang) => Object.hasOwn(urls, lang));
+          }
+          if (target && target !== current) {
+            location.replace(urls[target] + location.search + location.hash);
+          }
+        </script>
+      )
+    }
     <title>{title}</title>
 
     <!-- Preload only the headline face (LCP); the rest load on first use. -->
@@ -42,6 +82,8 @@ const jsonLd = {
     <Font cssVariable="--font-ibm-plex-mono" />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {locales.map((l) => <link rel="alternate" hreflang={l} href={getAbsoluteLocaleUrl(l, path)} />)}
+    <link rel="alternate" hreflang="x-default" href={getAbsoluteLocaleUrl(defaultLocale, path)} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
     <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
@@ -63,7 +105,12 @@ const jsonLd = {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale" content={localeInfo[locale].og} />
+    {
+      locales
+        .filter((l) => l !== locale)
+        .map((l) => <meta property="og:locale:alternate" content={localeInfo[l].og} />)
+    }
     {ogImage && <meta property="og:image" content={ogImage} />}
 
     <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />

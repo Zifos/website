@@ -1,0 +1,63 @@
+---
+import Logo from "@brand/assets/logo/zifos-logo-small.svg";
+import LanguageSwitch from "@/components/LanguageSwitch.astro";
+import * as legendEn from "@/data/fire-legend/en.md";
+import * as legendEs from "@/data/fire-legend/es.md";
+import { type Locale, toLocale } from "@/i18n";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import * as styles from "@/styles/home.css";
+
+const copy = {
+  en: {
+    // One entry per line: the title breaks where we choose, never mid-word.
+    title: ["we write poems", "that compile"],
+    areas: ["Engineering", "Product", "Design", "Infrastructure"],
+    meta: {
+      title: "Zifos — We write poems that compile",
+      description: "Engineering, product, design and infrastructure. We write poems that compile.",
+    },
+    legend: legendEn,
+  },
+  es: {
+    title: ["escribimos poemas", "que compilan"],
+    areas: ["Ingeniería", "Producto", "Diseño", "Infraestructura"],
+    meta: {
+      title: "Zifos — Escribimos poemas que compilan",
+      description:
+        "Ingeniería, producto, diseño e infraestructura. Escribimos poemas que compilan.",
+    },
+    legend: legendEs,
+  },
+} satisfies Record<Locale, unknown>;
+
+const { title, areas, meta, legend } = copy[toLocale(Astro.currentLocale)];
+---
+
+<BaseLayout title={meta.title} description={meta.description} scheme="dark">
+  <main class={styles.page}>
+    <div class={styles.curtain} aria-hidden="true"></div>
+    <div class={styles.focusGradient} aria-hidden="true">
+      {styles.FOCUS_LAYERS.map(() => <div class={styles.focusLayer}></div>)}
+    </div>
+    <section class={styles.hero}>
+      <Logo class={styles.logo} aria-hidden="true" />
+      <h1 class={styles.title} aria-label={title.join(" ")}>
+        {
+          title.map((line) => (
+            <span class={styles.titleLine} aria-hidden="true">
+              {[...line].map((char) => <span class={styles.letter}>{char}</span>)}
+            </span>
+          ))
+        }
+      </h1>
+      <ul class={styles.areas}>
+        {areas.map((area) => <li class={styles.area}>{area}</li>)}
+      </ul>
+    </section>
+    <LanguageSwitch class={styles.languageSwitch} />
+    <article class={styles.story} aria-labelledby="legend">
+      <h2 id="legend" class={styles.storyTitle}>{legend.frontmatter.title}</h2>
+      <legend.Content />
+    </article>
+  </main>
+</BaseLayout>

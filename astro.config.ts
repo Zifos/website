@@ -1,6 +1,7 @@
 import sitemap from "@astrojs/sitemap";
 import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 import { defineConfig, envField, fontProviders } from "astro/config";
+import { defaultLocale, locales } from "./src/i18n/config";
 
 export default defineConfig({
   // Canonical origin — used for canonical URLs, Open Graph and the sitemap. Overridable so the same
@@ -14,6 +15,12 @@ export default defineConfig({
     },
   },
   trailingSlash: "always",
+  // Default locale at the root, the rest under a prefix (/es/). See src/i18n.
+  i18n: {
+    locales: [...locales],
+    defaultLocale,
+    routing: { prefixDefaultLocale: false },
+  },
   build: {
     format: "directory",
     inlineStylesheets: "auto",
@@ -50,7 +57,14 @@ export default defineConfig({
       fallbacks: ["ui-monospace", "monospace"],
     },
   ],
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      i18n: {
+        defaultLocale,
+        locales: Object.fromEntries(locales.map((locale) => [locale, locale])),
+      },
+    }),
+  ],
   vite: {
     plugins: [vanillaExtractPlugin()],
   },

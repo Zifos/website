@@ -1,27 +1,5 @@
 ---
-import Logo from "@brand/assets/logo/zifos-logo-small.svg";
-import { Content as Leyenda, frontmatter as leyenda } from "@/data/leyenda-del-fuego.md";
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import * as styles from "@/styles/home.css";
-
-const title = "we are back";
+import Home from "@/components/Home.astro";
 ---
 
-<BaseLayout title="Zifos — We are back" description="We are back." scheme="dark">
-  <main class={styles.page}>
-    <div class={styles.curtain} aria-hidden="true"></div>
-    <div class={styles.focusGradient} aria-hidden="true">
-      {styles.FOCUS_LAYERS.map(() => <div class={styles.focusLayer}></div>)}
-    </div>
-    <section class={styles.hero}>
-      <Logo class={styles.logo} aria-hidden="true" />
-      <h1 class={styles.title} aria-label={title}>
-        {[...title].map((char) => <span class={styles.letter} aria-hidden="true">{char}</span>)}
-      </h1>
-    </section>
-    <article class={styles.story} lang="es" aria-labelledby="leyenda">
-      <h2 id="leyenda" class={styles.storyTitle}>{leyenda.title}</h2>
-      <Leyenda />
-    </article>
-  </main>
-</BaseLayout>
+<Home />

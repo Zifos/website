@@ -1,0 +1,42 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { LOCALE_STORAGE_KEY, localeInfo, locales, routePath, toLocale, ui } from "@/i18n";
+import * as styles from "./LanguageSwitch.css";
+
+interface Props {
+  /** Positioning comes from the page. */
+  class?: string;
+}
+
+const locale = toLocale(Astro.currentLocale);
+const path = routePath(Astro.url.pathname);
+---
+
+<nav class:list={[styles.nav, Astro.props.class]} aria-label={ui[locale].language}>
+  {
+    locales.map((option) => (
+      <a
+        class={styles.link}
+        href={getRelativeLocaleUrl(option, path)}
+        hreflang={option}
+        lang={option}
+        aria-label={localeInfo[option].name}
+        aria-current={option === locale ? "page" : undefined}
+        data-locale={option}
+      >
+        {localeInfo[option].short}
+      </a>
+    ))
+  }
+</nav>
+
+<script define:vars={{ key: LOCALE_STORAGE_KEY }} is:inline>
+  // Remember an explicit pick so the root stops following the browser language (see BaseLayout).
+  for (const link of document.querySelectorAll("a[data-locale]")) {
+    link.addEventListener("click", () => {
+      try {
+        localStorage.setItem(key, link.dataset.locale);
+      } catch {}
+    });
+  }
+</script>

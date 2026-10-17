@@ -3,16 +3,19 @@ import { vars } from "@/styles/theme.css";
 
 // Temp home: a film-intro title sequence, then the legend peeking from below the fold.
 // Timeline (s): bars open 0–1.6 · logo reveal 1.0–3.4 (alone on stage) · title letters from 2.6
-// · tracking-in 2.6–6.2 · story 4.6.
+// (each line LINE_STAGGER after the previous) · tracking-in 2.6–6.2 · areas 4.4 · story 5.0.
 const LETTER_START = 2.6;
 const LETTER_STAGGER = 0.08;
+const LINE_STAGGER = 0.6;
 const TRACK_DURATION = 3.6;
 const TRACK_SPREAD = "0.47em"; // extra gap per letter at the start of the tracking-in
-const MAX_LETTERS = 40;
+const MAX_LETTERS = 24; // per line
+const MAX_LINES = 3;
 
-// Letter position from each end, so the offset from the center works for any title length.
+// Letter position from each end of its line, so each line tracks in toward its own center.
 const fromStart = createVar();
 const fromEnd = createVar();
+const lineDelay = createVar();
 
 const fadeIn = keyframes({
   from: { opacity: 0, filter: "blur(8px)" },
@@ -114,22 +117,37 @@ export const hero = style({
   ].join(", "),
 });
 
-// Hierarchy: the title leads; the logo sits above it at ~1/3 of its width, like a studio card.
+// Hierarchy: the title leads; the logo sits above it at ~2/5 of its width on phones and ~1/4 on
+// wide screens, like a studio card. Capped at 200px: past that, the regular logo variant applies.
 export const logo = style({
-  width: "clamp(6rem, 13vw, 11rem)",
+  width: "clamp(7.5rem, 15vw, 12.5rem)",
   height: "auto",
   color: vars.color.textSecondary,
   animation: `${logoReveal} 2.4s cubic-bezier(0.22, 1, 0.36, 1) 1s both`,
 });
 
 export const title = style({
-  // Instrument Serif is condensed: "we are back" is ~3.8em wide, so 20vw fills most of a phone screen.
-  fontSize: "clamp(3.5rem, 20vw, 9rem)",
+  // Instrument Serif is condensed: the longest line ("escribimos poemas") is ~6em wide, so 13vw
+  // fits a phone screen with the hero padding.
+  fontSize: "clamp(2.5rem, 13vw, 7.5rem)",
   fontWeight: 400,
   lineHeight: 1,
   textAlign: "center",
   letterSpacing: "-0.02em",
 });
+
+// Lines never wrap: the copy sets the breaks, sized so the longest line fits a phone.
+export const titleLine = style({
+  display: "block",
+  whiteSpace: "nowrap",
+  vars: { [lineDelay]: "0s" },
+});
+
+for (let n = 2; n <= MAX_LINES; n++) {
+  globalStyle(`${titleLine}:nth-child(${n})`, {
+    vars: { [lineDelay]: `${((n - 1) * LINE_STAGGER).toFixed(2)}s` },
+  });
+}
 
 export const letter = style({
   display: "inline-block",
@@ -146,12 +164,66 @@ for (let n = 1; n <= MAX_LETTERS; n++) {
   const delay = (LETTER_START + (n - 1) * LETTER_STAGGER).toFixed(2);
   globalStyle(`${letter}:nth-child(${n})`, {
     vars: { [fromStart]: String(n) },
-    animationDelay: `${delay}s, ${LETTER_START}s`,
+    animationDelay: `calc(${lineDelay} + ${delay}s), ${LETTER_START}s`,
   });
   globalStyle(`${letter}:nth-last-child(${n})`, {
     vars: { [fromEnd]: String(n) },
   });
 }
+
+// What we do, under the title: a quiet credits line in the sans, before the story arrives.
+export const areas = style({
+  display: "flex",
+  flexWrap: "wrap",
+  justifyContent: "center",
+  rowGap: "0.25em",
+  margin: 0,
+  padding: 0,
+  listStyle: "none",
+  fontFamily: vars.font.sans,
+  fontSize: "clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem)",
+  fontWeight: 500,
+  letterSpacing: "0.14em",
+  textTransform: "uppercase",
+  color: vars.color.textSecondary,
+  animation: `${fadeIn} 1.2s ease-out 4.4s both`,
+  "@media": {
+    // Too narrow for one line (~26rem): two rows, dots aligned in a column, never one opening a row.
+    "(max-width: 36rem)": {
+      display: "grid",
+      gridTemplateColumns: "auto auto",
+      justifyContent: "center",
+    },
+  },
+});
+
+export const area = style({
+  selectors: {
+    // Middle dot between areas.
+    "& + &::before": {
+      content: "·",
+      marginInline: "0.75em",
+    },
+  },
+  "@media": {
+    "(max-width: 36rem)": {
+      selectors: {
+        "&:nth-child(odd)": { justifySelf: "end" },
+        "&:nth-child(odd)::before": { content: "none" },
+      },
+    },
+  },
+});
+
+// Top-right, over the hero (same layer, later in the DOM); arrives with the story so it never
+// competes with the intro.
+export const languageSwitch = style({
+  position: "absolute",
+  top: `clamp(${vars.space.md}, 3vw, ${vars.space.lg})`,
+  insetInlineEnd: `clamp(${vars.space.md}, 4vw, ${vars.space.lg})`,
+  zIndex: 2,
+  animation: `${fadeIn} 1.2s ease-out 5s both`,
+});
 
 export const story = style({
   // Prose measure: ~60–66 characters per line on wide screens; on phones the screen is the limit.
@@ -166,7 +238,7 @@ export const story = style({
   fontSize: "clamp(1.0625rem, 0.95rem + 0.4vw, 1.25rem)",
   lineHeight: 1.65,
   // Appears once the title has landed, so it doesn't compete with the intro.
-  animation: `${fadeIn} 1.2s ease-out 4.6s both`,
+  animation: `${fadeIn} 1.2s ease-out 5s both`,
 });
 
 export const storyTitle = style({
@@ -225,8 +297,11 @@ FOCUS_LAYERS.forEach((blur, i) => {
 });
 
 // Respect reduced motion: show the final frame.
-globalStyle(`${curtain}::before, ${curtain}::after, ${logo}, ${letter}, ${story}`, {
-  "@media": {
-    "(prefers-reduced-motion: reduce)": { animation: "none" },
+globalStyle(
+  `${curtain}::before, ${curtain}::after, ${logo}, ${letter}, ${areas}, ${story}, ${languageSwitch}`,
+  {
+    "@media": {
+      "(prefers-reduced-motion: reduce)": { animation: "none" },
+    },
   },
-});
+);
