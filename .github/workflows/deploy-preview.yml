@@ -1,5 +1,5 @@
 # Preview deploy to GitHub Pages: https://zifos.github.io/website/
-# Built as a preview (noindex, robots Disallow) so it never competes with zifos.com in search.
+# Built as a preview (noindex, robots Disallow) so it never competes with zifos.dev in search.
 # Actions are pinned to commit SHAs (tag in the trailing comment) for supply-chain safety.
 name: Deploy preview
 

@@ -27,7 +27,7 @@ Every page uses `src/layouts/BaseLayout.astro` with a unique `title` and `descri
 
 ## Preview deploy
 
-Every push to `main` deploys a preview to GitHub Pages (https://zifos.github.io/website/) via `.github/workflows/deploy-preview.yml`. It builds with `SITE_URL`, `BASE_PATH=/website` and `PREVIEW=true` (noindex + robots `Disallow`), so it never competes with zifos.com in search. Because of the base path, never hardcode root-relative URLs (`/foo`): use `import.meta.env.BASE_URL`. Workflow actions are pinned to commit SHAs.
+Every push to `main` deploys a preview to GitHub Pages (https://zifos.github.io/website/) via `.github/workflows/deploy-preview.yml`. It builds with `SITE_URL`, `BASE_PATH=/website` and `PREVIEW=true` (noindex + robots `Disallow`), so it never competes with zifos.dev in search. Because of the base path, never hardcode root-relative URLs (`/foo`): use `import.meta.env.BASE_URL`. Workflow actions are pinned to commit SHAs.
 
 ## Commands
 

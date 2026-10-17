@@ -5,7 +5,7 @@ import { defineConfig, envField, fontProviders } from "astro/config";
 export default defineConfig({
   // Canonical origin — used for canonical URLs, Open Graph and the sitemap. Overridable so the same
   // build can target a preview host (e.g. GitHub Pages under /website/), see .github/workflows.
-  site: process.env.SITE_URL ?? "https://zifos.com",
+  site: process.env.SITE_URL ?? "https://zifos.dev",
   base: process.env.BASE_PATH ?? "/",
   env: {
     schema: {
