@@ -1,0 +1,75 @@
+---
+import { Font } from "astro:assets";
+import "@/styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  noindex?: boolean;
+  /** Force a color scheme for the whole page (browser chrome, overscroll); default follows the system. */
+  scheme?: "dark" | "light";
+}
+
+const { title, description, image, noindex = false, scheme } = Astro.props;
+
+const siteName = "Zifos";
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = image ? new URL(image, Astro.site).href : undefined;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: siteName,
+  url: Astro.site?.href,
+};
+---
+
+<!doctype html>
+<html lang="en" data-scheme={scheme}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+
+    <!-- Preload only the headline face (LCP); the rest load on first use. -->
+    <Font cssVariable="--font-instrument-serif" preload={[{ style: "normal", subset: "latin" }]} />
+    <Font cssVariable="--font-dm-sans" />
+    <Font cssVariable="--font-ibm-plex-mono" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {
+      scheme ? (
+        <meta name="theme-color" content={scheme === "dark" ? "#0F0F10" : "#F5F1EA"} />
+      ) : (
+        <>
+          <meta name="theme-color" content="#F5F1EA" media="(prefers-color-scheme: light)" />
+          <meta name="theme-color" content="#0F0F10" media="(prefers-color-scheme: dark)" />
+        </>
+      )
+    }
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="en_US" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+
+    <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

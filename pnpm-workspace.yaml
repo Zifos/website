@@ -1,0 +1,6 @@
+# Lockfile + exact versions; refuse packages published < 3 days ago (supply-chain guard).
+saveExact: true
+engineStrict: true
+minimumReleaseAge: 4320
+allowBuilds:
+  esbuild: true

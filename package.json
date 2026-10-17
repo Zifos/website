@@ -1,0 +1,30 @@
+{
+  "name": "zifos-website",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check && biome check .",
+    "fix": "biome check --write .",
+    "astro": "astro",
+    "brand:logo": "node scripts/build-logo.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "3.7.4",
+    "@vanilla-extract/css": "1.21.3",
+    "astro": "7.3.8"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@biomejs/biome": "2.5.15",
+    "@vanilla-extract/vite-plugin": "5.2.6",
+    "typescript": "6.0.3"
+  }
+}

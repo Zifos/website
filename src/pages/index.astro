@@ -1,0 +1,17 @@
+---
+import Logo from "@brand/assets/logo/zifos-logo.svg";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import * as styles from "@/styles/home.css";
+
+const title = "we are back";
+---
+
+<BaseLayout title="Zifos — We are back" description="We are back." scheme="dark">
+  <main class={styles.main}>
+    <div class={styles.bars} aria-hidden="true"></div>
+    <Logo class={styles.logo} aria-hidden="true" />
+    <h1 class={styles.title} aria-label={title}>
+      {[...title].map((char) => <span class={styles.letter} aria-hidden="true">{char}</span>)}
+    </h1>
+  </main>
+</BaseLayout>
