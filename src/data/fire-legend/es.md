@@ -48,7 +48,7 @@ Antes de que cayera la noche, una pequeña llama volvía a iluminar el claro.
 
 Unas pocas palabras, conocidas mucho antes de ser escritas, cruzaron la distancia.
 
-Una vez más, hay fuego en el claro.
+*Una vez más, hay fuego en el claro.*
 
 Y ellos acudieron.
 

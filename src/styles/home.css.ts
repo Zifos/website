@@ -231,8 +231,6 @@ export const story = style({
   marginInline: "auto",
   paddingInline: `clamp(${vars.space.md}, 5vw, ${vars.space.lg})`,
   paddingBlockStart: vars.space.md,
-  // Room to scroll the last paragraph up out of the focus gradient (bottom 40svh of the screen).
-  paddingBlockEnd: "46svh",
   // Body copy in the sans (brand/05-tipografia.md); the title keeps the serif via the heading rule.
   fontFamily: vars.font.sans,
   fontSize: "clamp(1.0625rem, 0.95rem + 0.4vw, 1.25rem)",
@@ -257,6 +255,41 @@ export const contact = style({
   maxWidth: "100%",
   marginBlockStart: vars.space.md,
   animation: `${fadeIn} 1.2s ease-out 5s both`,
+});
+
+// After the legend's last line: a quiet way back up, styled like the language switch.
+export const footer = style({
+  display: "flex",
+  justifyContent: "center",
+  paddingInline: vars.space.md,
+  // A clear pause after the legend's last line, so the link reads as leaving the story.
+  paddingBlockStart: "clamp(4rem, 12vh, 7rem)",
+  // Room to scroll the link up out of the focus gradient (bottom 40svh of the screen).
+  paddingBlockEnd: "46svh",
+});
+
+export const backToTop = style({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.5em",
+  padding: "0.5em 0.25em",
+  fontFamily: vars.font.sans,
+  fontSize: "0.8125rem",
+  fontWeight: 500,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: vars.color.textSecondary,
+  textDecoration: "none",
+  transition: "color 0.2s ease",
+  selectors: {
+    "&:hover": { color: vars.color.text },
+    "&:focus-visible": { outline: "1px solid currentColor", outlineOffset: "2px" },
+  },
+});
+
+export const backToTopIcon = style({
+  width: "1.125em",
+  height: "1.125em",
 });
 
 globalStyle(`${story} p`, {

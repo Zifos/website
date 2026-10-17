@@ -17,6 +17,7 @@ export const ui = {
     copyEmail: "Copy email",
     copied: "Copied",
     sendEmail: "Send email",
+    backToTop: "Back to top",
   },
   es: {
     language: "Idioma",
@@ -24,6 +25,7 @@ export const ui = {
     copyEmail: "Copiar email",
     copied: "Copiado",
     sendEmail: "Enviar email",
+    backToTop: "Volver arriba",
   },
 } satisfies Record<Locale, Record<string, string>>;
 

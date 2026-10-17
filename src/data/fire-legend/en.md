@@ -48,7 +48,7 @@ Before night fell, a small flame lit up the clearing once more.
 
 A few words, known long before they were ever written, crossed the distance.
 
-Once again, there is fire in the clearing.
+*Once again, there is fire in the clearing.*
 
 And they came.
 

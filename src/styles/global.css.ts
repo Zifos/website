@@ -3,6 +3,8 @@ import { vars } from "./theme.css";
 
 globalStyle(":root", {
   colorScheme: "light dark",
+  // In-page links (back to top) glide instead of jumping, unless motion is reduced.
+  "@media": { "(prefers-reduced-motion: no-preference)": { scrollBehavior: "smooth" } },
   WebkitTextSizeAdjust: "100%",
   textSizeAdjust: "100%",
 });
