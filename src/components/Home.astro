@@ -7,6 +7,7 @@ import * as legendEs from "@/data/fire-legend/es.md";
 import { type Locale, toLocale, ui } from "@/i18n";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import * as styles from "@/styles/home.css";
+import { vars } from "@/styles/theme.css";
 
 const copy = {
   en: {
@@ -36,13 +37,14 @@ const { title, areas, meta, legend } = copy[locale];
 
 <BaseLayout title={meta.title} description={meta.description} scheme="dark">
   <main class={styles.page}>
-    <div class={styles.curtain} aria-hidden="true"></div>
+    <!-- The fire (see components/fire): the legend's layer, under the hero, scrolling with the page. -->
+    <canvas class={styles.storyCanvas} aria-hidden="true" data-story-canvas data-debug-line={vars.color.border}></canvas>
     <div class={styles.focusGradient} aria-hidden="true" data-focus-gradient>
       {styles.FOCUS_LAYERS.map(() => <div class={styles.focusLayer}></div>)}
     </div>
     <section class={styles.hero}>
       <Logo class={styles.logo} aria-hidden="true" />
-      <h1 class={styles.title} aria-label={title.join(" ")}>
+      <h1 class={styles.title} aria-label={title.join(" ")} data-title>
         {
           title.map((line) => (
             <span class={styles.titleLine} aria-hidden="true">
@@ -50,16 +52,27 @@ const { title, areas, meta, legend } = copy[locale];
             </span>
           ))
         }
+        <span class={styles.titleText} aria-hidden="true" data-title-text>
+          {
+            title.map((line, i) => (
+              <>
+                <span class={styles.titleTextLine}>{line}</span>
+                {i < title.length - 1 && " "}
+              </>
+            ))
+          }
+        </span>
       </h1>
-      <ul class={styles.areas}>
+      <ul class={styles.areas} data-smoke-reveal>
         {areas.map((area) => <li class={styles.area}>{area}</li>)}
       </ul>
-      <div class={styles.contact}>
+      <div class={styles.contact} data-smoke-reveal>
         <EmailField />
       </div>
     </section>
-    <LanguageSwitch class={styles.languageSwitch} />
-    <article class={styles.story} aria-labelledby="legend">
+    <LanguageSwitch class={styles.languageSwitch} data-smoke-reveal />
+    <canvas class={styles.flameCanvas} aria-hidden="true" data-flame-canvas data-fire={vars.color.fire} data-bronze={vars.color.bronze} data-ash={vars.color.ash}></canvas>
+    <article class={styles.story} aria-labelledby="legend" data-story>
       <h2 id="legend" class={styles.storyTitle}>{legend.frontmatter.title}</h2>
       <legend.Content />
     </article>
@@ -77,6 +90,62 @@ const { title, areas, meta, legend } = copy[locale];
 </BaseLayout>
 
 <script>
+  import { startFire } from "@/components/fire";
+  import {
+    letter as letterClass,
+    letterKern,
+    titleLine as lineClass,
+    titleTextLine as textLineClass,
+  } from "@/styles/home.css";
+
+  // The title animates letter by letter, each in its own box, which loses the font's kerning.
+  // Before it starts, each letter is nudged to where the title's plain text (the invisible copy
+  // over it, for selection) puts it.
+  const title = document.querySelector<HTMLElement>("[data-title]");
+  if (title) {
+    // One phrase, broken in two only for the layout: copied, it reads as one line.
+    const text = title.querySelector("[data-title-text]");
+    document.addEventListener("copy", (event) => {
+      const selection = getSelection();
+      if (!text || !selection?.rangeCount || !text.contains(selection.anchorNode)) return;
+      event.clipboardData?.setData("text/plain", selection.toString().replace(/\s+/g, " ").trim());
+      event.preventDefault();
+    });
+    const kernVar = letterKern.replace(/^var\((--[^,)]+).*$/, "$1");
+    document.fonts.ready.then(() => {
+      const range = document.createRange();
+      const texts = title.querySelectorAll(`.${textLineClass}`);
+      title.querySelectorAll(`.${lineClass}`).forEach((line, l) => {
+        const letters = [...line.querySelectorAll<HTMLElement>(`.${letterClass}`)];
+        const text = texts[l]?.firstChild;
+        if (!text) return;
+        const size = Number.parseFloat(getComputedStyle(line).fontSize);
+        const kerned = letters.map((_, i) => {
+          range.setStart(text, i);
+          range.setEnd(text, i + 1);
+          return range.getBoundingClientRect().left;
+        });
+        // Measured on a copy at rest (the real letters are mid-animation), removed before the next
+        // paint. A few passes, as engines round box layout.
+        const nudges = letters.map(() => 0);
+        for (let pass = 0; pass < 3; pass++) {
+          const copy = line.cloneNode(true) as HTMLElement;
+          const boxes = [...copy.querySelectorAll<HTMLElement>(`.${letterClass}`)];
+          for (const box of boxes) box.style.animation = "none";
+          line.after(copy);
+          const boxed = boxes.map((box) => box.getBoundingClientRect().left);
+          copy.remove();
+          const error = boxed.map((x, i) => kerned[i]! - kerned[0]! - (x - boxed[0]!));
+          letters.forEach((letter, i) => {
+            if (i === 0) return;
+            nudges[i]! += error[i]! - error[i - 1]!;
+            letter.style.setProperty(kernVar, `${nudges[i]! / size}em`);
+          });
+        }
+      });
+    });
+  }
+
   // Clear the focus gradient while the page end is on screen, so the legend's last lines and the
   // back-to-top link aren't blurred (and the page needs no extra scroll room to escape the band).
   const gradient = document.querySelector("[data-focus-gradient]");
@@ -85,5 +154,38 @@ const { title, areas, meta, legend } = copy[locale];
     new IntersectionObserver(([entry]) => {
       gradient.toggleAttribute("data-cleared", entry?.isIntersecting ?? false);
     }).observe(end);
+  }
+
+  // The fire, unless motion is reduced. Dev only: `?haze-debug` skips the intro and shows the raw
+  // distortion over vertical lines, without blur or dimming.
+  const main = document.querySelector("main");
+  const storyCanvas = document.querySelector<HTMLCanvasElement>("[data-story-canvas]");
+  const flameCanvas = document.querySelector<HTMLCanvasElement>("[data-flame-canvas]");
+  const story = document.querySelector<HTMLElement>("[data-story]");
+  const debug = import.meta.env.DEV && new URLSearchParams(location.search).has("haze-debug");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (main && storyCanvas && flameCanvas && story && gradient instanceof HTMLElement) {
+    const { fire = "", bronze = "", ash = "" } = flameCanvas.dataset;
+    if (debug || !reduced) {
+      // The smoke reveals these (see home.css.ts); they wait for it from the start.
+      const revealed = [...main.querySelectorAll<HTMLElement>("[data-smoke-reveal]")];
+      main.toggleAttribute("data-fire", true);
+      startFire({
+        storyCanvas,
+        flameCanvas,
+        story,
+        title,
+        cleared: () => gradient.hasAttribute("data-cleared"),
+        // The canvas draws the text: hide the DOM copy (still selectable and read aloud).
+        onActive: (active) => main.toggleAttribute("data-haze-on", active),
+        colors: { fire, bronze, ash },
+        reveal: revealed,
+        // No WebGL: everything just fades in.
+        onFail: () => {
+          for (const el of revealed) el.toggleAttribute("data-revealed", true);
+        },
+        debugLine: debug ? storyCanvas.dataset.debugLine : undefined,
+      });
+    }
   }
 </script>

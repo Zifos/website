@@ -6,13 +6,17 @@ import * as styles from "./LanguageSwitch.css";
 interface Props {
   /** Positioning comes from the page. */
   class?: string;
+  /** Lets the page hand the switch to its intro (see Home.astro). */
+  "data-smoke-reveal"?: boolean;
 }
+
+const { class: className, ...attrs } = Astro.props;
 
 const locale = toLocale(Astro.currentLocale);
 const path = routePath(Astro.url.pathname);
 ---
 
-<nav class:list={[styles.nav, Astro.props.class]} aria-label={ui[locale].language}>
+<nav class:list={[styles.nav, className]} aria-label={ui[locale].language} {...attrs}>
   {
     locales.map((option) => (
       <a

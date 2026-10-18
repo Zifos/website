@@ -1,16 +1,25 @@
-import { createVar, globalStyle, keyframes, style } from "@vanilla-extract/css";
+import { createVar, fallbackVar, globalStyle, keyframes, style } from "@vanilla-extract/css";
+import { TITLE_LINES } from "@/components/fire/ignition";
 import { vars } from "@/styles/theme.css";
 
-// Temp home: a film-intro title sequence, then the legend peeking from below the fold.
-// Timeline (s): bars open 0–1.6 · logo reveal 1.0–3.4 (alone on stage) · title letters from 2.6
-// (each line LINE_STAGGER after the previous) · tracking-in 2.6–6.2 · areas 4.4 · story 5.0.
-const LETTER_START = 2.6;
-const LETTER_STAGGER = 0.08;
-const LINE_STAGGER = 0.6;
-const TRACK_DURATION = 3.6;
-const TRACK_SPREAD = "0.47em"; // extra gap per letter at the start of the tracking-in
+// Temp home: a title sequence over a fire burning just below the screen, then the legend peeking
+// from below the fold. Timeline (s): logo reveal 0.2–2.0 · the title in two steps, one line at a
+// time; as each is landing, the fire below answers it (IGNITION: the failed try, then the one that
+// takes) · the fire's smoke reveals the rest: the legend, the areas, the contact and the language
+// switch (`data-fire`, below). Without it (reduced motion, no WebGL) those fade in on their own:
+// areas 5.0 · contact and language 5.4 · story STORY_DELAY.
+const LETTER_START = TITLE_LINES[0];
+const LETTER_STAGGER = 0.035;
+const LINE_STAGGER = TITLE_LINES[1] - TITLE_LINES[0];
+const RESOLVE_DURATION = 1.0;
+const TRACK_DURATION = 1.6;
+// Extra gap per letter at the start of the tracking-in: small, so even the outer letters of the
+// longest line start on a phone screen.
+const TRACK_SPREAD = "0.1em";
 const MAX_LETTERS = 24; // per line
 const MAX_LINES = 3;
+const STORY_DELAY = 5.8; // s, after the tracking-in has settled
+const STORY_DURATION = 2.4; // s, a slow rise out of the blur
 
 // Letter position from each end of its line, so each line tracks in toward its own center.
 const fromStart = createVar();
@@ -42,11 +51,6 @@ const trackIn = keyframes({
   to: { translate: "0 0" },
 });
 
-const openBar = keyframes({
-  from: { height: "50%" },
-  to: { height: 0 },
-});
-
 // Static noise texture in two layers (feColorMatrix maps fractal noise to alpha, no grey veil):
 // dark specks show on the light letters, light specks show on the dark background.
 // Strength lives in the alpha row's last two values; tune there, not with element opacity.
@@ -73,26 +77,6 @@ export const page = style({
       backgroundImage: `${NOISE_DARK}, ${NOISE_LIGHT}`,
       backgroundSize: "180px",
     },
-  },
-});
-
-// Curtain bars over the whole viewport: start closed (black screen), then retract fully.
-export const curtain = style({
-  position: "fixed",
-  inset: 0,
-  zIndex: 3,
-  pointerEvents: "none",
-  selectors: {
-    "&::before, &::after": {
-      content: "",
-      position: "absolute",
-      insetInline: 0,
-      height: 0,
-      backgroundColor: vars.color.background,
-      animation: `${openBar} 1.6s cubic-bezier(0.65, 0, 0.35, 1) both`,
-    },
-    "&::before": { top: 0 },
-    "&::after": { bottom: 0 },
   },
 });
 
@@ -123,10 +107,11 @@ export const logo = style({
   width: "clamp(7.5rem, 15vw, 12.5rem)",
   height: "auto",
   color: vars.color.textSecondary,
-  animation: `${logoReveal} 2.4s cubic-bezier(0.22, 1, 0.36, 1) 1s both`,
+  animation: `${logoReveal} 1.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both`,
 });
 
 export const title = style({
+  position: "relative",
   // Instrument Serif is condensed: the longest line ("escribimos poemas") is ~6em wide, so 13vw
   // fits a phone screen with the hero padding.
   fontSize: "clamp(2.5rem, 13vw, 7.5rem)",
@@ -138,9 +123,29 @@ export const title = style({
 
 // Lines never wrap: the copy sets the breaks, sized so the longest line fits a phone.
 export const titleLine = style({
+  position: "relative",
   display: "block",
   whiteSpace: "nowrap",
   vars: { [lineDelay]: "0s" },
+});
+
+// The title as plain text, invisible, exactly over its animated letters: what gets selected and
+// copied (as one phrase, see Home.astro), with one continuous highlight (letter boxes leave gaps)
+// in the font's real kerning. Selected, it shows in the selection colors over
+// the letters below.
+export const titleText = style({
+  position: "absolute",
+  inset: 0,
+  // As wide as its widest line, centered: the phrase wraps exactly between its lines.
+  width: "min-content",
+  marginInline: "auto",
+  color: "transparent",
+});
+
+// One phrase, its lines unbreakable and joined by a plain space (no <br>, which ends a paragraph
+// for selection): a triple-click selects the whole title.
+export const titleTextLine = style({
+  whiteSpace: "nowrap",
 });
 
 for (let n = 2; n <= MAX_LINES; n++) {
@@ -149,14 +154,22 @@ for (let n = 2; n <= MAX_LINES; n++) {
   });
 }
 
+// Per-letter kerning (em), set by the script in Home.astro: separate boxes lose the font's kerning,
+// so each letter is nudged to where plain text (titleText) puts it.
+export const letterKern = createVar();
+
 export const letter = style({
   display: "inline-block",
   whiteSpace: "pre",
+  // See titleText. Safari only knows the prefixed property.
+  WebkitUserSelect: "none",
+  userSelect: "none",
+  marginInlineStart: fallbackVar(letterKern, "0"),
   willChange: "translate, transform, opacity, filter",
   // `resolve` animates transform, `trackIn` animates translate — they compose.
   animation: [
-    `${resolve} 1.6s cubic-bezier(0.16, 1, 0.3, 1) both`,
-    `${trackIn} ${TRACK_DURATION}s cubic-bezier(0.16, 1, 0.3, 1) ${LETTER_START}s both`,
+    `${resolve} ${RESOLVE_DURATION}s cubic-bezier(0.16, 1, 0.3, 1) both`,
+    `${trackIn} ${TRACK_DURATION}s cubic-bezier(0.16, 1, 0.3, 1) both`,
   ].join(", "),
 });
 
@@ -164,7 +177,8 @@ for (let n = 1; n <= MAX_LETTERS; n++) {
   const delay = (LETTER_START + (n - 1) * LETTER_STAGGER).toFixed(2);
   globalStyle(`${letter}:nth-child(${n})`, {
     vars: { [fromStart]: String(n) },
-    animationDelay: `calc(${lineDelay} + ${delay}s), ${LETTER_START}s`,
+    // Each line tracks in from its own start.
+    animationDelay: `calc(${lineDelay} + ${delay}s), calc(${lineDelay} + ${LETTER_START}s)`,
   });
   globalStyle(`${letter}:nth-last-child(${n})`, {
     vars: { [fromEnd]: String(n) },
@@ -186,7 +200,7 @@ export const areas = style({
   letterSpacing: "0.14em",
   textTransform: "uppercase",
   color: vars.color.textSecondary,
-  animation: `${fadeIn} 1.2s ease-out 4.4s both`,
+  animation: `${fadeIn} 1.2s ease-out 5s both`,
   "@media": {
     // Too narrow for one line (~26rem): two rows, dots aligned in a column, never one opening a row.
     "(max-width: 36rem)": {
@@ -222,7 +236,7 @@ export const languageSwitch = style({
   top: `clamp(${vars.space.md}, 3vw, ${vars.space.lg})`,
   insetInlineEnd: `clamp(${vars.space.md}, 4vw, ${vars.space.lg})`,
   zIndex: 2,
-  animation: `${fadeIn} 1.2s ease-out 5s both`,
+  animation: `${fadeIn} 1.2s ease-out 5.4s both`,
 });
 
 export const story = style({
@@ -235,8 +249,11 @@ export const story = style({
   fontFamily: vars.font.sans,
   fontSize: "clamp(1.0625rem, 0.95rem + 0.4vw, 1.25rem)",
   lineHeight: 1.65,
-  // Appears once the title has landed, so it doesn't compete with the intro.
-  animation: `${fadeIn} 1.2s ease-out 5s both`,
+  // Softer than the hero: the legend glows in the firelight rather than competing with the title.
+  // The fire's canvas paints with this computed color too.
+  color: `color-mix(in oklab, ${vars.color.text} 72%, ${vars.color.background})`,
+  // Appears once the whole intro has landed, slowly, so it doesn't compete with it.
+  animation: `${fadeIn} ${STORY_DURATION}s ease-out ${STORY_DELAY}s both`,
 });
 
 export const storyTitle = style({
@@ -254,7 +271,7 @@ export const contact = style({
   justifyContent: "center",
   maxWidth: "100%",
   marginBlockStart: vars.space.md,
-  animation: `${fadeIn} 1.2s ease-out 5s both`,
+  animation: `${fadeIn} 1.2s ease-out 5.4s both`,
 });
 
 // After the legend's last line: a quiet way back up, styled like the language switch.
@@ -343,12 +360,60 @@ FOCUS_LAYERS.forEach((blur, i) => {
   });
 });
 
+// The fire (components/fire), on two canvases sized to the large viewport (`lvh`: the screen with
+// iOS toolbars collapsed), so they never resize as the toolbars come and go. The legend's layer
+// is a window over the page, taller than the screen and moved along by the script, so it scrolls
+// natively with the text; it shares the band's layer under the hero. The flame layer (glow,
+// smoke, sparks) is fixed over the hero too, under the grain, with room below for the bounce.
+// Both stay empty without the script; the fire's own clock times their entrance.
+export const storyCanvas = style({
+  position: "absolute",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "140lvh", // OVERSCAN in storyLayer.ts
+  zIndex: 1,
+  pointerEvents: "none",
+  willChange: "transform",
+});
+
+export const flameCanvas = style({
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "115lvh",
+  zIndex: 2,
+  pointerEvents: "none",
+});
+
+// While the canvas draws the text, the DOM copy only keeps its layout, selection and semantics,
+// and the fire's shader does the band's blur and dimming (no backdrop filters to keep up with).
+// Fill color, not `color`: the script reads each element's color to paint it.
+globalStyle(`${page}[data-haze-on] ${story}`, {
+  WebkitTextFillColor: "transparent",
+});
+globalStyle(`${page}[data-haze-on] ${focusGradient}`, {
+  visibility: "hidden",
+});
+
+// With the fire running, the smoke reveals these (the script sets `data-revealed` as the smoke
+// front passes each one) instead of their timed entrances.
+const smokeRevealed = [areas, contact, languageSwitch];
+globalStyle(smokeRevealed.map((el) => `${page}[data-fire] ${el}`).join(", "), {
+  animation: "none",
+  opacity: 0,
+  filter: "blur(8px)",
+  transition: "opacity 1.4s ease-out, filter 1.4s ease-out",
+});
+globalStyle(smokeRevealed.map((el) => `${page}[data-fire] ${el}[data-revealed]`).join(", "), {
+  opacity: 1,
+  filter: "blur(0)",
+});
+
 // Respect reduced motion: show the final frame.
-globalStyle(
-  `${curtain}::before, ${curtain}::after, ${logo}, ${letter}, ${areas}, ${story}, ${languageSwitch}, ${contact}`,
-  {
-    "@media": {
-      "(prefers-reduced-motion: reduce)": { animation: "none" },
-    },
+globalStyle(`${logo}, ${letter}, ${areas}, ${story}, ${languageSwitch}, ${contact}`, {
+  "@media": {
+    "(prefers-reduced-motion: reduce)": { animation: "none" },
   },
-);
+});
