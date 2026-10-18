@@ -367,14 +367,23 @@ FOCUS_LAYERS.forEach((blur, i) => {
 // natively with the text; it shares the band's layer under the hero. The flame layer (glow,
 // smoke, sparks) is fixed over the hero too, under the grain, with room below for the bounce.
 // Both stay empty without the script; the fire's own clock times their entrance.
+// The legend's canvas sits in a page-sized frame that clips it: moved along by the script, it must
+// never reach past the page's end. Safari grows the page's scroll room for anything that does,
+// and doesn't give it back when it moves away (an empty screen after the footer).
+export const storyFrame = style({
+  position: "absolute",
+  inset: 0,
+  zIndex: 1,
+  overflow: "clip",
+  pointerEvents: "none",
+});
+
 export const storyCanvas = style({
   position: "absolute",
   top: 0,
   left: 0,
   width: "100%",
   height: "140lvh", // OVERSCAN in storyLayer.ts
-  zIndex: 1,
-  pointerEvents: "none",
   willChange: "transform",
 });
 

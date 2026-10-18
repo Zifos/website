@@ -125,8 +125,8 @@ export function createStoryLayer({ canvas, story, smoke, onReady }: Options) {
   // Snap to device pixels, so undistorted text samples texel centers and stays crisp.
   const snap = (n: number) => Math.round(n * ratio) / ratio;
 
-  // Keep the canvas window around the screen: move it (page coordinates) only once the scroll has
-  // used up half its overscan, and never past the page's end (it would extend the page).
+  // Keep the canvas window around the screen: move it (page coordinates, within its page-sized
+  // frame) only once the scroll has used up half its overscan, and never past the page's end.
   const page = canvas.parentElement;
   let at = Number.NaN;
   const place = () => {
@@ -136,7 +136,8 @@ export function createStoryLayer({ canvas, story, smoke, onReady }: Options) {
     const scrolled = -page.getBoundingClientRect().top;
     const end = Math.max(page.offsetHeight - height, 0);
     const target = Math.round(Math.min(Math.max(scrolled - margin, 0), end));
-    const pinned = target === 0 || target === end;
+    // At either end, or left beyond the end (the page or screen changed size): move right away.
+    const pinned = target === 0 || target === end || at > end;
     if (target === at || (!pinned && Math.abs(target - at) < margin / 2)) return;
     at = target;
     canvas.style.transform = `translate3d(0, ${at}px, 0)`;

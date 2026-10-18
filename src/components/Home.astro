@@ -38,7 +38,9 @@ const { title, areas, meta, legend } = copy[locale];
 <BaseLayout title={meta.title} description={meta.description} scheme="dark">
   <main class={styles.page}>
     <!-- The fire (see components/fire): the legend's layer, under the hero, scrolling with the page. -->
-    <canvas class={styles.storyCanvas} aria-hidden="true" data-story-canvas></canvas>
+    <div class={styles.storyFrame} aria-hidden="true">
+      <canvas class={styles.storyCanvas} data-story-canvas></canvas>
+    </div>
     <div class={styles.focusGradient} aria-hidden="true" data-focus-gradient>
       {styles.FOCUS_LAYERS.map(() => <div class={styles.focusLayer}></div>)}
     </div>
