@@ -117,9 +117,8 @@ vec2 screen() { return vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uRatio + 
 float dither() { return (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0; }
 `;
 
-export interface Layer {
+interface Layer {
   gl: WebGLRenderingContext;
-  ratio: number;
   uniform: (name: string) => WebGLUniformLocation | null;
   /** Matches the drawing buffer to the canvas size; returns the canvas rect on screen. */
   fit: () => DOMRect;
@@ -163,7 +162,6 @@ export function createLayer(canvas: HTMLCanvasElement, fragment: string, ratio: 
   const uOffset = uniform("uOffset");
   const layer: Layer = {
     gl,
-    ratio,
     uniform,
     fit: () => {
       const view = canvas.getBoundingClientRect();

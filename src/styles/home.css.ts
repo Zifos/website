@@ -4,7 +4,7 @@ import { vars } from "@/styles/theme.css";
 
 // Temp home: a title sequence over a fire burning just below the screen, then the legend peeking
 // from below the fold. Timeline (s): logo reveal 0.2–2.0 · the title in two steps, one line at a
-// time; as each is landing, the fire below answers it (IGNITION: the failed try, then the one that
+// time; while each is being read, the fire below answers it (IGNITION: the failed try, then the one that
 // takes) · the fire's smoke reveals the rest: the legend, the areas, the contact and the language
 // switch (`data-fire`, below). Without it (reduced motion, no WebGL) those fade in on their own:
 // areas 5.0 · contact and language 5.4 · story STORY_DELAY.
@@ -131,8 +131,7 @@ export const titleLine = style({
 
 // The title as plain text, invisible, exactly over its animated letters: what gets selected and
 // copied (as one phrase, see Home.astro), with one continuous highlight (letter boxes leave gaps)
-// in the font's real kerning. Selected, it shows in the selection colors over
-// the letters below.
+// in the font's real kerning. Selected, it shows in the selection colors over the letters below.
 export const titleText = style({
   position: "absolute",
   inset: 0,
@@ -229,8 +228,8 @@ export const area = style({
   },
 });
 
-// Top-right, over the hero (same layer, later in the DOM); arrives with the story so it never
-// competes with the intro.
+// Top-right, over the hero (same layer, later in the DOM); arrives after the title (revealed by the
+// smoke when the fire runs), so it never competes with the intro.
 export const languageSwitch = style({
   position: "absolute",
   top: `clamp(${vars.space.md}, 3vw, ${vars.space.lg})`,
@@ -264,8 +263,9 @@ export const storyTitle = style({
   textAlign: "center",
 });
 
-// Closes the hero, a step further from the areas than the hero's own gap; arrives with the
-// story. Inside the hero, so it shares its layer above the focus gradient (never blurred).
+// Closes the hero, a step further from the areas than the hero's own gap; arrives after the title
+// (revealed by the smoke when the fire runs). Inside the hero, so it shares its layer above the
+// focus gradient (never blurred).
 export const contact = style({
   display: "flex",
   justifyContent: "center",
@@ -315,7 +315,8 @@ globalStyle(`${story} p`, {
   textWrap: "pretty",
 });
 
-// Focus gradient: a band fixed over the bottom half of the screen that blurs and dims what scrolls
+// Focus gradient, without the fire (reduced motion, no WebGL; with it, the fire's shader does
+// this, see below): a band fixed over the bottom of the screen that blurs and dims what scrolls
 // through it, progressively toward the bottom edge. A single backdrop blur can only crossfade
 // sharp↔blurred, so layers of increasing blur fade in one after another (stacked backdrop
 // filters compound), giving a true progressive blur. Sits under the noise, so the grain stays crisp.
@@ -390,10 +391,10 @@ export const flameCanvas = style({
 // While the canvas draws the text, the DOM copy only keeps its layout, selection and semantics,
 // and the fire's shader does the band's blur and dimming (no backdrop filters to keep up with).
 // Fill color, not `color`: the script reads each element's color to paint it.
-globalStyle(`${page}[data-haze-on] ${story}`, {
+globalStyle(`${page}[data-story-drawn] ${story}`, {
   WebkitTextFillColor: "transparent",
 });
-globalStyle(`${page}[data-haze-on] ${focusGradient}`, {
+globalStyle(`${page}[data-story-drawn] ${focusGradient}`, {
   visibility: "hidden",
 });
 

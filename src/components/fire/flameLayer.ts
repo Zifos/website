@@ -20,9 +20,9 @@ const SWELL = {
 } as const;
 /**
  * The scouts: sparks the ignition flicks up from the fire below the screen. A small burst of three
- * with the first, failed try; two more, on very different paths, with the ignition that takes. No hot air yet:
- * each is shot out fast, the air's drag eats its speed and gravity bends it over into a falling
- * arc, while it burns its mass away. In 3D, seen in perspective, and out of focus (the focus is on
+ * with the first, failed try; two more, on very different paths, with the ignition that takes.
+ * No hot air yet: each is shot out fast, the air's drag eats its speed and gravity bends it over
+ * into a falling arc, while it burns its mass away. In 3D, seen in perspective, and out of focus (the focus is on
  * the scene's center): irregular burning embers, softer the further from the focal plane.
  */
 interface Scout {
@@ -163,16 +163,16 @@ vec4 swell(vec2 p, float since, float width, vec3 hot) {
   return sum;
 }
 
-// A volley of sparks thrown up together (since: s since thrown, < 0: not yet). They shoot out at
-// speed..2×speed px/s, slow down in the air (drag over \`drag\` s) and burn out.
-vec4 volley(vec2 p, float since, float seedBase, float speed, float drag, float width, vec3 hot) {
+// The crackle (see VOLLEY): sparks thrown up together as it catches (since: s since, < 0: not
+// yet). They shoot out at 350–700 px/s, slow down in the air and burn out.
+vec4 volley(vec2 p, float since, float width, vec3 hot) {
   vec4 sum = vec4(0.0);
   if (since < 0.0 || since > 2.6) return sum;
   for (int i = 0; i < ${VOLLEY}; i++) {
-    float seed = float(i) * 5.17 + seedBase;
+    float seed = float(i) * 5.17 + 101.0;
     float age = since - hash(seed + 6.0) * 0.25; // not quite together
     if (age < 0.0) continue;
-    float rise = speed * (1.0 + hash(seed + 1.0)) * drag * (1.0 - exp(-age / drag));
+    float rise = 350.0 * (1.0 + hash(seed + 1.0)) * 0.9 * (1.0 - exp(-age / 0.9));
     float dy = p.y - (uFloor + 6.0 - rise);
     if (abs(dy) > 7.0) continue;
     float x = (0.15 + 0.7 * hash(seed)) * width + sin(age * 2.0 + seed) * 12.0
@@ -246,7 +246,7 @@ void main() {
       float period = 4.0 + hash(fi * 1.31) * 3.0;
       float t = uSparkTime + hash(fi * 7.17) * period; // staggered launches
       float age = fract(t / period);
-      if (uSparkTime - age * period < 0.0) continue; // launched before the fire caught
+      if (uSparkTime - age * period < 0.0) continue; // launched before the fire was lit
       float seed = fi * 13.73 + floor(t / period) * 7.91;
       float rise = age * period * (60.0 + hash(seed + 1.0) * 80.0);
       float dy = p.y - (uFloor + 6.0 - rise);
@@ -269,7 +269,7 @@ ${SCOUTS.map(
   ({ delay, x, below, v: [vx, vy, vz], drag, life, heat }, i) =>
     `  sparks += scout(p, uScout - ${glsl(delay)}, vec2(${glsl(x)}, ${glsl(below)}), vec3(${glsl(vx)}, ${glsl(vy)}, ${glsl(vz)}), ${glsl(drag)}, ${glsl(life)}, ${glsl(heat)}, ${glsl(i * 1.37 + 0.5)}, view);`,
 ).join("\n")}
-  sparks += volley(p, uBurst, 101.0, 350.0, 0.9, view.x, hot);
+  sparks += volley(p, uBurst, view.x, hot);
   // Then, once it burns hard, the embers it carries up.
   sparks += swell(p, uSwell, view.x, hot);
   color += min(sparks, 1.0) * (1.0 - color.a);
@@ -280,7 +280,7 @@ ${SCOUTS.map(
 }
 `;
 
-export interface FlameFrame {
+interface FlameFrame {
   time: number;
   haze: number;
   band: { top: number; height: number };

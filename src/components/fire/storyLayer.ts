@@ -30,7 +30,6 @@ uniform sampler2D uText;
 uniform vec2 uOrigin;   // story's top-left on screen, CSS px
 uniform vec2 uSize;     // story size covered by the texture, CSS px
 uniform vec3 uSmoke;    // color of freshly revealed text
-uniform vec4 uLine;     // debug lines, premultiplied (alpha 0: off, and no blur or dimming)
 uniform float uSettle;  // 0–1: after the smoke, the legend slowly comes up to full
 uniform float uFocus;   // 0–1: the band's blur and dimming (0 at the page end, so it reads sharp)
 ${NOISE}
@@ -42,11 +41,10 @@ vec4 text(vec2 p) { return texture2D(uText, (p - uOrigin) / uSize); }
 void main() {
   vec2 q = haze(screen());
   float band = clamp((q.y - uBand.x) / uBand.y, 0.0, 1.0);
-  bool debug = uLine.a > 0.0;
 
   // Progressive blur: a disk of taps growing toward the bottom, turned per pixel so the taps'
   // pattern dissolves into the grain.
-  float radius = debug ? 0.0 : ${glsl(BLUR)} * band * uFocus;
+  float radius = ${glsl(BLUR)} * band * uFocus;
   vec4 color;
   if (radius > 0.4) {
     float a = fract(sin(dot(gl_FragCoord.xy, vec2(41.3, 289.1))) * 43758.5453) * 6.2831853;
@@ -66,17 +64,14 @@ ${ringTaps}
 
   // Sinks into the dark toward the bottom (the page background shows through): 35% dimmer at
   // 40% of the band, 85% at its bottom.
-  if (!debug) {
-    float dim = band < 0.4 ? band / 0.4 * 0.35 : mix(0.35, 0.85, (band - 0.4) / 0.6);
-    color *= 1.0 - dim * uFocus;
-  }
+  float dim = band < 0.4 ? band / 0.4 * 0.35 : mix(0.35, 0.85, (band - 0.4) / 0.6);
+  color *= 1.0 - dim * uFocus;
 
-  if (debug && mod(q.x, 20.0) < 2.0) color += uLine * (1.0 - color.a);
   gl_FragColor = color;
 }
 `;
 
-export interface StoryFrame {
+interface StoryFrame {
   time: number;
   front: number;
   haze: number;
@@ -96,11 +91,9 @@ interface Options {
   smoke: string;
   /** Called once the canvas holds the story (hide the DOM text). */
   onReady: () => void;
-  /** Dev only: color token for vertical reference lines that reveal the distortion. */
-  debugLine?: string | undefined;
 }
 
-export function createStoryLayer({ canvas, story, smoke, onReady, debugLine }: Options) {
+export function createStoryLayer({ canvas, story, smoke, onReady }: Options) {
   const ratio = Math.min(devicePixelRatio || 1, MAX_PIXEL_RATIO);
   const layer = createLayer(canvas, FRAGMENT, ratio);
   const raster = document.createElement("canvas");
@@ -128,7 +121,6 @@ export function createStoryLayer({ canvas, story, smoke, onReady, debugLine }: O
     haze: uniform("uHaze"),
   };
   gl.uniform3f(uniform("uSmoke"), ...resolveColor(smoke, canvas));
-  if (debugLine) gl.uniform4f(uniform("uLine"), ...resolveColor(debugLine, canvas), 1);
 
   // Snap to device pixels, so undistorted text samples texel centers and stays crisp.
   const snap = (n: number) => Math.round(n * ratio) / ratio;

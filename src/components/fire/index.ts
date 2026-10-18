@@ -1,6 +1,7 @@
-// The fire below the page: it catches while the title forms (glow, then sparks), then a column of
-// smoke rises up the screen as the title lands, revealing what it passes (the legend, then the
-// rest of the hero), and the air over the fire starts to shimmer. Two canvases share one clock:
+// The fire below the page: a failed first try answers the title's first line, and the ignition
+// that takes answers the second. Its smoke races up to the title, revealing what it passes (the
+// legend, then the rest of the hero), embers swell up as it burns hard, and the air over the fire
+// starts to shimmer. Two canvases share one clock:
 // the story layer under the hero, which scrolls with the page, and the flame layer fixed above
 // everything but the grain.
 
@@ -13,12 +14,10 @@ const TIMELINE = {
   // WebGL comes up in two small steps while the logo comes in, before the title starts.
   flameSetup: 1.6,
   storySetup: 1.8, // well before the smoke reaches the legend
-  embers: IGNITION.try, // the try leaves a low glow and a few lazy sparks behind
-  // A first, failed try: a warm pulse in the glow and a spark flicked up. Then the ignition that
-  // takes (its own warm pulse is the flare) throws two more sparks up around…
-  scout: IGNITION.try,
-  // …it catching: the glow flares, sparks fly up in a volley, the air surges up and throws the
-  // smoke column up the screen, once the whole title has been read.
+  // The first, failed try: a bump of warm light and three sparks flicked up, leaving a low glow
+  // and a few lazy sparks behind. Then the ignition that takes throws two more sparks up as it
+  // catches: the glow flares, sparks crackle up, the air surges and throws the smoke up the screen.
+  try: IGNITION.try,
   catch: IGNITION.take,
   glowIn: 1.5, // from embers to full glow, after catching
   swell: 1.2, // s after catching: burning hard, it starts carrying embers up
@@ -84,7 +83,7 @@ interface Options {
   story: HTMLElement;
   /** The smoke races up to it, then slows down. */
   title?: HTMLElement | null;
-  /** Fades the haze out (the band's `data-cleared`). */
+  /** Clears the band's haze, blur and dimming (the page end is in view). */
   cleared: () => boolean;
   /** The canvas draws the story (hide the DOM text) or stopped (show it again). */
   onActive: (active: boolean) => void;
@@ -93,15 +92,12 @@ interface Options {
   reveal: HTMLElement[];
   /** WebGL is unavailable or lost: nothing will reveal the elements. */
   onFail: () => void;
-  /** Dev only: skip the intro and draw vertical reference lines in this color token. */
-  debugLine?: string | undefined;
 }
 
 export function startFire(options: Options) {
-  const { storyCanvas, flameCanvas, story, cleared, onActive, colors, debugLine } = options;
-  const skip = debugLine ? 60 : 0; // debug: as if the intro were long over
+  const { storyCanvas, flameCanvas, story, cleared, onActive, colors } = options;
   const at = (t: number, run: () => void) =>
-    setTimeout(run, Math.max(0, (t - skip) * 1000 - performance.now()));
+    setTimeout(run, Math.max(0, t * 1000 - performance.now()));
   let pending = [...options.reveal];
 
   let running = true;
@@ -123,7 +119,7 @@ export function startFire(options: Options) {
     if (!running) return;
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
-    const t = now / 1000 + skip;
+    const t = now / 1000;
     const time = t % 1000; // keeps the shader's noise inputs small
     const target = cleared() ? 0 : 1;
     clear += Math.sign(target - clear) * Math.min(Math.abs(target - clear), dt / HAZE_FADE);
@@ -137,7 +133,7 @@ export function startFire(options: Options) {
     // The hot air carries the smoke's shapes up: steady, much faster in the surge.
     lift += dt * (1 + 5 * rush);
     const front = smokeFront(
-      t - TIMELINE.catch,
+      since,
       floor + FRONT_OVERRUN.below,
       options.title?.getBoundingClientRect().bottom ?? floor * 0.3,
       -FRONT_OVERRUN.above,
@@ -157,9 +153,9 @@ export function startFire(options: Options) {
     const air = { time, front, floor, band, lift, haze: haze * clear * (0.85 + 0.3 * breath) };
     const settle = smooth(ramp(t, TIMELINE.settle, TIMELINE.settleIn));
     storyLayer?.draw({ ...air, focus: clear, settle });
-    const embers = EMBERS * smooth(ramp(t, TIMELINE.embers, 0.5));
+    const embers = EMBERS * smooth(ramp(t, TIMELINE.try, 0.5));
     // The try: a short, bright bump as its spark comes into view. The catch: a slower flare.
-    const bump = WARMTH * pulse(t - TIMELINE.scout - 0.08, 0.18);
+    const bump = WARMTH * pulse(t - TIMELINE.try - 0.08, 0.18);
     const flare = envelope(since, FLARE.attack, FLARE.decay) * 1.5;
     const full = smooth(ramp(t, TIMELINE.catch, TIMELINE.glowIn));
     const out = TIMELINE.catch + TIMELINE.smokeRise - TIMELINE.smokeOut;
@@ -176,10 +172,10 @@ export function startFire(options: Options) {
       // No smoke before it catches: the failed try is only light and a spark.
       ambient: full,
       sparks: embers + (1 - EMBERS) * full,
-      sparkTime: t - TIMELINE.embers,
+      sparkTime: t - TIMELINE.try,
       burst: since,
       swell: since - TIMELINE.swell,
-      scout: t - TIMELINE.scout,
+      scout: t - TIMELINE.try,
       flicker: breath,
     });
     requestAnimationFrame(frame);
@@ -199,7 +195,6 @@ export function startFire(options: Options) {
         story,
         smoke: colors.ash,
         onReady: () => onActive(true),
-        debugLine,
       });
       if (!storyLayer) return fail();
       storyLayer.start();

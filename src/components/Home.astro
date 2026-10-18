@@ -38,7 +38,7 @@ const { title, areas, meta, legend } = copy[locale];
 <BaseLayout title={meta.title} description={meta.description} scheme="dark">
   <main class={styles.page}>
     <!-- The fire (see components/fire): the legend's layer, under the hero, scrolling with the page. -->
-    <canvas class={styles.storyCanvas} aria-hidden="true" data-story-canvas data-debug-line={vars.color.border}></canvas>
+    <canvas class={styles.storyCanvas} aria-hidden="true" data-story-canvas></canvas>
     <div class={styles.focusGradient} aria-hidden="true" data-focus-gradient>
       {styles.FOCUS_LAYERS.map(() => <div class={styles.focusLayer}></div>)}
     </div>
@@ -156,17 +156,15 @@ const { title, areas, meta, legend } = copy[locale];
     }).observe(end);
   }
 
-  // The fire, unless motion is reduced. Dev only: `?haze-debug` skips the intro and shows the raw
-  // distortion over vertical lines, without blur or dimming.
+  // The fire, unless motion is reduced.
   const main = document.querySelector("main");
   const storyCanvas = document.querySelector<HTMLCanvasElement>("[data-story-canvas]");
   const flameCanvas = document.querySelector<HTMLCanvasElement>("[data-flame-canvas]");
   const story = document.querySelector<HTMLElement>("[data-story]");
-  const debug = import.meta.env.DEV && new URLSearchParams(location.search).has("haze-debug");
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (main && storyCanvas && flameCanvas && story && gradient instanceof HTMLElement) {
     const { fire = "", bronze = "", ash = "" } = flameCanvas.dataset;
-    if (debug || !reduced) {
+    if (!reduced) {
       // The smoke reveals these (see home.css.ts); they wait for it from the start.
       const revealed = [...main.querySelectorAll<HTMLElement>("[data-smoke-reveal]")];
       main.toggleAttribute("data-fire", true);
@@ -177,14 +175,13 @@ const { title, areas, meta, legend } = copy[locale];
         title,
         cleared: () => gradient.hasAttribute("data-cleared"),
         // The canvas draws the text: hide the DOM copy (still selectable and read aloud).
-        onActive: (active) => main.toggleAttribute("data-haze-on", active),
+        onActive: (active) => main.toggleAttribute("data-story-drawn", active),
         colors: { fire, bronze, ash },
         reveal: revealed,
         // No WebGL: everything just fades in.
         onFail: () => {
           for (const el of revealed) el.toggleAttribute("data-revealed", true);
         },
-        debugLine: debug ? storyCanvas.dataset.debugLine : undefined,
       });
     }
   }
